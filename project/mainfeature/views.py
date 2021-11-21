@@ -30,7 +30,6 @@ class GroupAPIView(APIView):
             return Response(end_time.error,
                             status=status.HTTP_400_BAD_REQUEST)
 
-        # start_time < end_time
         start_time_cal = int(start_time.data.split(':')[0])
         end_time_cal = int(end_time.data.split(':')[0])
         if end_time_cal < start_time_cal:
@@ -57,6 +56,7 @@ class GroupAPIView(APIView):
                 end_time=end_time.data,
                 group=group
             )
+            # timeblock 생성
             for i in range(1, block_quantity+1):
                 TimeBlock.objects.create(
                     order=i,

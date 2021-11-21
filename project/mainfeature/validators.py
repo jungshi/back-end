@@ -32,7 +32,6 @@ def validate_date_list(data):
         context.error['msg'] = 'date형 데이터 중 최소 한 가지가 포함되지 않았습니다.'
         return context
     date_list = re.findall(date_pattern, data)
-    print(date_list)
     if not date_list:
         context.error['msg'] = '날짜가 포함되지 않았거나, 포함되었지만 형식에서 벗어납니다.'
         return context
