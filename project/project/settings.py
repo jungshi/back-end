@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
+import json
+
+DEPLOY = False
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,13 +24,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-1g0iey)*m&1i0(#x!7ws3j@^k4f39mzs+q+7n!(now5x0*6--*'
+if DEPLOY:
+    CONFIG_SECRET_DIR = '.config_secret'
+    CONFIG_SETTINGS_COMMON_FILE = os.path.join(
+        BASE_DIR, CONFIG_SECRET_DIR, 'settings_common.json'
+    )
+    config_secret = json.loads(open(CONFIG_SETTINGS_COMMON_FILE).read())
+    SECRET_KEY = config_secret['django_key']
 
+SECRET_KEY = "123"
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 

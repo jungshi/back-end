@@ -34,14 +34,16 @@ def validate_date_list(data):
     date_list = re.findall(date_pattern, data)
     print(date_list)
     if not date_list:
-        context.error['msg'] = f'날짜가 포함되지 않았거나, 포함되었지만 형식에서 벗어납니다.'
+        context.error['msg'] = '날짜가 포함되지 않았거나, 포함되었지만 형식에서 벗어납니다.'
         return context
     for date in date_list:
         separate_date = date.split('-')
         year = int(separate_date[0])
         month = int(separate_date[1])
         day = int(separate_date[2])
-        if not ((1900 <= year <= 2999) and (1 <= month <= 12) and 1 <= day <= 31):
+        if not ((1900 <= year <= 2999) and
+                (1 <= month <= 12) and
+                (1 <= day <= 31)):
             context.error['msg'] = f'{date}은(는) 올바른 날짜가 아닙니다.'
             return context
     context.data = date_list
@@ -62,7 +64,8 @@ def validate_time(data):
     separate_time = data.split(':')
     hour = int(separate_time[0])
     minute = int(separate_time[1])
-    if not ((0 <= hour <= 24) and (0 <= minute <= 59)):
+    if not ((0 <= hour <= 24) and (0 <= minute <= 59)) \
+       or (hour == 24 and minute > 0):
         context.error['msg'] = f'{data}은(는) 올바른 시간이 아닙니다.'
         return context
     context.data = data
