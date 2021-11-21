@@ -54,7 +54,7 @@ def validate_date_list(data):
 
 def validate_time(data):
     context = Context()
-    time_format = re.compile('\d{2}:\d{2}')
+    time_format = re.compile('\d{2}:\d{2}') # noqa
     if not data:
         context.error['msg'] = 'time형 데이터 중 최소 한 가지가 포함되지 않았습니다.'
         return context

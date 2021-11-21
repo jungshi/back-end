@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import TimeTable
 
+
 class testserializer(serializers.ModelSerializer):
     class Meta:
         model = TimeTable
