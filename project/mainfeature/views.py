@@ -3,7 +3,9 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .validators import validate_str, validate_date_list, validate_time
-from .processors import GroupRetrieveProcessor, GroupCreateProcessor
+from .processors import GroupRetrieveProcessor, GroupCreateProcessor, \
+                        MemberPostProcessor
+from .models import Group, Member
 
 
 class GroupAPIView(APIView):
@@ -27,3 +29,17 @@ class GroupAPIView(APIView):
         if context.has_error:
             return Response(context.error, status=status.HTTP_400_BAD_REQUEST)
         return Response(context.data, status=status.HTTP_201_CREATED)
+
+
+class MemberAPIView(APIView):
+    
+    def post(self, request):
+        group_id = request.data.get('group_id')
+        name = request.data.get('name')
+        context = MemberPostProcessor(group_id, name)
+        if context.has_error:
+            return Response(context.error, status=status.HTTP_400_BAD_REQUEST)
+        elif context.data['status'] == 200:
+            return Response(context.data, status=status.HTTP_200_OK)
+        elif context.data['status'] == 201:
+            return Response(context.data, status=status.HTTP_201_CREATED)

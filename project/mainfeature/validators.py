@@ -3,7 +3,7 @@ import re
 
 class DataContext:
     def __init__(self, data=None):
-        self.data = data
+        self.value = data
         self.error_msg = None
         self.has_error = True
 
@@ -11,16 +11,16 @@ class DataContext:
 def validate_str(data):
     context = DataContext(data)
     if not data:
-        context.error_msg = 'str형 데이터 중 최소 한 가지가 포함되지 않았습니다.'
-        context.data = None
+        context.error_msg = 'str형 데이터 중 한 가지가 포함되지 않았거나 형식이 잘못됐습니다.'
+        context.value = None
         return context
     elif not (type(data) == str):
         context.error_msg = f'`{data}`는 str 타입이 아닙니다.'
-        context.data = None
+        context.value = None
         return context
     elif not (len(data) <= 255):
         context.error_msg = f'`{data}`의 길이가 255자를 초과합니다.'
-        context.data = None
+        context.value = None
         return context
 
     context.has_error = False
@@ -29,7 +29,7 @@ def validate_str(data):
 
 def validate_date_list(data):
     context = DataContext()
-    date_pattern = r"\d{4}-\d{2}-\d{2}"
+    date_pattern = r"\d{4}-\d{2}-\d{2}" # noqa
     if not data:
         context.error_msg = 'date형 데이터 중 최소 한 가지가 포함되지 않았습니다.'
         return context
@@ -50,7 +50,7 @@ def validate_date_list(data):
             context.error_msg = f'{date}은(는) 올바른 날짜가 아닙니다.'
             return context
 
-    context.data = date_list
+    context.value = date_list
     context.has_error = False
     return context
 
@@ -60,11 +60,11 @@ def validate_time(data):
     time_format = re.compile('\d{2}:\d{2}') # noqa
     if not data:
         context.error_msg = 'time형 데이터 중 최소 한 가지가 포함되지 않았습니다.'
-        context.data = None
+        context.value = None
         return context
     if not (time_format.match(data)):
         context.error_msg = f'`{data}`을(를) `HH:MM` 형식에 맞춰주세요.'
-        context.data = None
+        context.value = None
         return context
 
     separate_time = data.split(':')
@@ -73,7 +73,7 @@ def validate_time(data):
     if not ((0 <= hour <= 24) and (0 <= minute <= 59)) \
        or (hour == 24 and minute > 0):
         context.error_msg = f'{data}은(는) 올바른 시간이 아닙니다.'
-        context.data = None
+        context.value = None
         return context
 
     context.has_error = False
@@ -83,8 +83,8 @@ def validate_time(data):
 def validate_times(start_time, end_time):
     context = DataContext()
 
-    start_time_cal = int(start_time.data.split(':')[0])
-    end_time_cal = int(end_time.data.split(':')[0])
+    start_time_cal = int(start_time.value.split(':')[0])
+    end_time_cal = int(end_time.value.split(':')[0])
     if end_time_cal < start_time_cal:
         context.error_msg = 'end_time은 start_time보다 작을 수 없습니다.'
         return context
@@ -92,6 +92,6 @@ def validate_times(start_time, end_time):
     time_gap = end_time_cal - start_time_cal
     block_quantity = time_gap * 4
 
-    context.data = block_quantity
+    context.value = block_quantity
     context.has_error = False
     return context
