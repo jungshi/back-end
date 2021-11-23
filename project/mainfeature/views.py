@@ -2,10 +2,8 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .validators import validate_str, validate_date_list, validate_time
 from .processors import GroupRetrieveProcessor, GroupCreateProcessor, \
                         MemberPostProcessor
-from .models import Group, Member
 
 
 class GroupAPIView(APIView):
@@ -32,7 +30,7 @@ class GroupAPIView(APIView):
 
 
 class MemberAPIView(APIView):
-    
+
     def post(self, request):
         group_id = request.data.get('group_id')
         name = request.data.get('name')

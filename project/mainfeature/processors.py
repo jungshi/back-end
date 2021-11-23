@@ -38,7 +38,7 @@ def GroupRetrieveProcessor(group_id):
         table_data['id'] = table.pk
         table_data['date'] = table.date
         table_data['day'] = datetime.strptime(table.date, '%Y-%m-%d'
-                                    ).strftime('%a')
+                                              ).strftime('%a')
         table_data['start_time'] = table.start_time
         table_data['end_time'] = table.end_time
 
@@ -64,7 +64,7 @@ def GroupRetrieveProcessor(group_id):
     timeblocks = TimeBlock.objects.filter(timetable__group=group[0])
     timeblocks = timeblocks.annotate(avails_count=Count('avail_members'))
     max_count = timeblocks.aggregate(max_count=Max('avails_count')
-                                                  )['max_count']
+                                     )['max_count']
     context.data['data']['avails_max_count'] = max_count
     context.error = None
     context.has_error = False
@@ -72,67 +72,67 @@ def GroupRetrieveProcessor(group_id):
 
 
 def GroupCreateProcessor(group_name, dates, start_time, end_time):
-        context = Context()
+    context = Context()
 
-        group_name = validate_str(group_name)
-        dates = validate_date_list(dates)
-        start_time = validate_time(start_time)
-        end_time = validate_time(end_time)
+    group_name = validate_str(group_name)
+    dates = validate_date_list(dates)
+    start_time = validate_time(start_time)
+    end_time = validate_time(end_time)
 
-        if group_name.has_error:
-            context.error['msg'] = group_name.error_msg
-            context.data = None
-            return context
-        elif dates.has_error:
-            context.error['msg'] = dates.error_msg
-            context.data = None
-            return context
-        elif start_time.has_error:
-            context.error['msg'] = start_time.error_msg
-            context.data = None
-            return context
-        elif end_time.has_error:
-            context.error['msg'] = end_time.error_msg
-            context.data = None
-            return context
-
-        block_quantity = validate_times(start_time, end_time)
-        if block_quantity.has_error:
-            context.error['msg'] = block_quantity.error_msg
-            context.data = None
-            return context
-
-        # group 생성
-        group_id = uuid.uuid4()
-        group = Group.objects.create(
-            name=group_name.value,
-            group_id=group_id
-        )
-        # timetable 생성
-        for date in dates.value:
-            timetable = TimeTable.objects.create(
-                date=date,
-                start_time=start_time.value,
-                end_time=end_time.value,
-                group=group
-            )
-            # timeblock 생성
-            for i in range(1, block_quantity.value+1):
-                TimeBlock.objects.create(
-                    order=i,
-                    timetable=timetable
-                )
-
-        context.data['data']['id'] = group.pk
-        context.data['data']['group_name'] = group_name.value
-        context.data['data']['group_id'] = group_id
-        context.data['data']['dates'] = dates.value
-        context.data['data']['start_time'] = start_time.value
-        context.data['data']['end_time'] = end_time.value
-        context.data['status'] = 201
-        context.has_error = False
-        context.error = None
+    if group_name.has_error:
+        context.error['msg'] = group_name.error_msg
+        context.data = None
         return context
+    elif dates.has_error:
+        context.error['msg'] = dates.error_msg
+        context.data = None
+        return context
+    elif start_time.has_error:
+        context.error['msg'] = start_time.error_msg
+        context.data = None
+        return context
+    elif end_time.has_error:
+        context.error['msg'] = end_time.error_msg
+        context.data = None
+        return context
+
+    block_quantity = validate_times(start_time, end_time)
+    if block_quantity.has_error:
+        context.error['msg'] = block_quantity.error_msg
+        context.data = None
+        return context
+
+    # group 생성
+    group_id = uuid.uuid4()
+    group = Group.objects.create(
+        name=group_name.value,
+        group_id=group_id
+    )
+    # timetable 생성
+    for date in dates.value:
+        timetable = TimeTable.objects.create(
+            date=date,
+            start_time=start_time.value,
+            end_time=end_time.value,
+            group=group
+        )
+        # timeblock 생성
+        for i in range(1, block_quantity.value+1):
+            TimeBlock.objects.create(
+                order=i,
+                timetable=timetable
+            )
+
+    context.data['data']['id'] = group.pk
+    context.data['data']['group_name'] = group_name.value
+    context.data['data']['group_id'] = group_id
+    context.data['data']['dates'] = dates.value
+    context.data['data']['start_time'] = start_time.value
+    context.data['data']['end_time'] = end_time.value
+    context.data['status'] = 201
+    context.has_error = False
+    context.error = None
+    return context
 
 
 def MemberPostProcessor(group_id, name):
@@ -154,7 +154,7 @@ def MemberPostProcessor(group_id, name):
         context.error['msg'] = '잘못된 group_id입니다.'
         context.data = None
         return context
-    
+
     member = group[0].members.filter(name=name.value)
     if member:
         context.data['data']['timetables'] = []
@@ -163,7 +163,7 @@ def MemberPostProcessor(group_id, name):
             table_data['id'] = table.pk
             table_data['date'] = table.date
             order_list = member[0].timeblocks.filter(timetable=table
-                                                    ).values_list('order')
+                                                     ).values_list('order')
             order_list = [order[0] for order in order_list]
             table_data['avail_orders'] = order_list
             context.data['data']['timetables'].append(table_data)

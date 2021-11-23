@@ -11,7 +11,7 @@ class Member(models.Model):
     name = models.CharField(max_length=255)
     group = models.ForeignKey(Group, on_delete=models.CASCADE,
                               related_name='members')
-    
+
     def __str__(self):
         return self.name
 
