@@ -3,7 +3,7 @@ import uuid
 
 from .models import Group, TimeTable, TimeBlock, Member
 from .validators import validate_str, validate_date_list, validate_time, \
-                        validate_times
+                        validate_times, validate_int, validate_orders
 
 from django.db.models import Count, Max
 
@@ -18,9 +18,11 @@ class Context:
 
 def GroupRetrieveProcessor(group_id):
     context = Context()
-    if not group_id:
+
+    if not (type(group_id) == str):
+        msg = 'group_id가 쿼리스트링으로 포함되지 않았거나, 형식이 잘못되었습니다.'
+        context.error['msg'] = msg
         context.data = None
-        context.error['msg'] = 'group_id 쿼리스트링을 포함하여 요청을 보내주세요.'
         return context
 
     group = Group.objects.filter(group_id=group_id)
@@ -79,22 +81,12 @@ def GroupCreateProcessor(group_name, dates, start_time, end_time):
     start_time = validate_time(start_time)
     end_time = validate_time(end_time)
 
-    if group_name.has_error:
-        context.error['msg'] = group_name.error_msg
-        context.data = None
-        return context
-    elif dates.has_error:
-        context.error['msg'] = dates.error_msg
-        context.data = None
-        return context
-    elif start_time.has_error:
-        context.error['msg'] = start_time.error_msg
-        context.data = None
-        return context
-    elif end_time.has_error:
-        context.error['msg'] = end_time.error_msg
-        context.data = None
-        return context
+    validate_list = [group_name, dates, start_time, end_time]
+    for value in validate_list:
+        if value.has_error:
+            context.error['msg'] = value.error_msg
+            context.data = None
+            return context
 
     block_quantity = validate_times(start_time, end_time)
     if block_quantity.has_error:
@@ -140,14 +132,13 @@ def MemberPostProcessor(group_id, name):
 
     group_id = validate_str(group_id)
     name = validate_str(name)
-    if group_id.has_error:
-        context.error['msg'] = group_id.error_msg
-        context.data = None
-        return context
-    if name.has_error:
-        context.error['msg'] = name.error_msg
-        context.data = None
-        return context
+
+    validate_list = [group_id, name]
+    for value in validate_list:
+        if value.has_error:
+            context.error['msg'] = value.error_msg
+            context.data = None
+            return context
 
     group = Group.objects.filter(group_id=group_id.value)
     if not group:
@@ -167,6 +158,7 @@ def MemberPostProcessor(group_id, name):
             order_list = [order[0] for order in order_list]
             table_data['avail_orders'] = order_list
             context.data['data']['timetables'].append(table_data)
+        context.data['data']['member_id'] = member[0].pk
         context.has_error = False
         context.error = None
         return context
@@ -176,6 +168,79 @@ def MemberPostProcessor(group_id, name):
         name=name.value
     )
     context.data['data']['msg'] = f'멤버 {member.name}이(가) 성공적으로 생성되었습니다.'
+    context.data['status'] = 201
+    context.has_error = False
+    context.error = None
+    return context
+
+
+def TimesetProcessor(member_pk, first_order, last_order,
+                     dates, change_to, group_id):
+    context = Context()
+
+    if not (change_to == ('avail' or 'unavail')):
+        context.error['msg'] = '`change_to`는 `avail` 혹은 `unavail`이어야 합니다.'
+        context.data = None
+        return context
+
+    member_pk = validate_int(member_pk)
+    first_order = validate_int(first_order)
+    last_order = validate_int(last_order)
+    dates = validate_date_list(dates)
+    group_id = validate_str(group_id)
+
+    validate_list = [member_pk, first_order, last_order,
+                     dates, group_id]
+    for value in validate_list:
+        if value.has_error:
+            context.error['msg'] = value.error_msg
+            context.data = None
+            return context
+
+    group = Group.objects.filter(group_id=group_id.value)
+    if not group:
+        context.error['msg'] = '잘못된 group_id입니다.'
+        context.data = None
+        return context
+
+    member = group[0].members.filter(pk=member_pk.value)
+    if not member:
+        context.error['msg'] = '잘못된 member_pk입니다.'
+        context.data = None
+        return context
+
+    order_range = validate_orders(first_order.value, last_order.value,
+                                  group[0])
+    if order_range.has_error:
+        context.error['msg'] = order_range.error_msg
+        context.data = None
+        return context
+
+    print(order_range.value)
+
+    timetables = group[0].timetables.all()
+    for date in dates.value:
+        if not timetables.filter(date=date):
+            context.error['msg'] = f'`{date}`는 해당 그룹에게 없는 날짜입니다.'
+            context.data = None
+            return context
+
+    if change_to == 'avail':
+        for date in dates.value:
+            timeblocks = TimeBlock.objects.filter(timetable__group=group[0])
+            timeblocks = timeblocks.filter(timetable__date=date)
+            for order in order_range.value:
+                timeblock = timeblocks.get(order=order)
+                timeblock.avail_members.add(member[0])
+                timeblock.save()
+    elif change_to == 'unavail':
+        for date in dates.value:
+            timeblocks = timeblocks.filter(timetable__date=date)
+            for order in order_range.value:
+                timeblock = timeblocks.get(order=order)
+                timeblock.avail_members.remove(member[0])
+                timeblock.save()
+    context.data['data']['msg'] = '성공적으로 반영되었습니다.'
     context.data['status'] = 201
     context.has_error = False
     context.error = None
