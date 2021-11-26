@@ -37,10 +37,7 @@ class MemberAPIView(APIView):
         context = MemberPostProcessor(group_id, name)
         if context.has_error:
             return Response(context.error, status=status.HTTP_400_BAD_REQUEST)
-        elif context.data['status'] == 200:
-            return Response(context.data, status=status.HTTP_200_OK)
-        elif context.data['status'] == 201:
-            return Response(context.data, status=status.HTTP_201_CREATED)
+        return Response(context.data, status=status.HTTP_200_OK)
 
 
 class TimesetAPIView(APIView):
