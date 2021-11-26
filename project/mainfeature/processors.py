@@ -9,10 +9,10 @@ from django.db.models import Count, Max
 
 
 class Context:
-
+    
     def __init__(self):
-        self.error = {'status': 400, 'success': False}
-        self.data = {'status': 200, 'success': True, 'data': {}}
+        self.error = {}
+        self.data = {}
         self.has_error = True
 
 
@@ -27,14 +27,15 @@ def GroupRetrieveProcessor(group_id):
 
     group = Group.objects.filter(group_id=group_id)
     if not group:
+        msg = '유효하지 않은 group_id입니다.'
+        context.error['msg'] = msg
         context.data = None
-        context.error['msg'] = '유효하지 않은 group_id입니다.'
         return context
 
     timetables = group[0].timetables.all()
     block_count = timetables.first().timeblocks.count()
-    context.data['data']['block_count'] = block_count
-    context.data['data']['timetables'] = []
+    context.data['block_count'] = block_count
+    context.data['timetables'] = []
     for table in timetables:
         table_data = {}
         table_data['id'] = table.pk
@@ -60,14 +61,14 @@ def GroupRetrieveProcessor(group_id):
                 'avail_count': len(avail_list)
                 }
             table_data['timeblocks'].append(block_data)
-        context.data['data']['timetables'].append(table_data)
+        context.data['timetables'].append(table_data)
 
-    context.data['data']['member_count'] = len(member_list)
+    context.data['member_count'] = len(member_list)
     timeblocks = TimeBlock.objects.filter(timetable__group=group[0])
     timeblocks = timeblocks.annotate(avails_count=Count('avail_members'))
     max_count = timeblocks.aggregate(max_count=Max('avails_count')
                                      )['max_count']
-    context.data['data']['avails_max_count'] = max_count
+    context.data['avails_max_count'] = max_count
     context.error = None
     context.has_error = False
     return context
@@ -115,13 +116,12 @@ def GroupCreateProcessor(group_name, dates, start_time, end_time):
                 timetable=timetable
             )
 
-    context.data['data']['id'] = group.pk
-    context.data['data']['group_name'] = group_name.value
-    context.data['data']['group_id'] = group_id
-    context.data['data']['dates'] = dates.value
-    context.data['data']['start_time'] = start_time.value
-    context.data['data']['end_time'] = end_time.value
-    context.data['status'] = 201
+    context.data['id'] = group.pk
+    context.data['group_name'] = group_name.value
+    context.data['group_id'] = group_id
+    context.data['dates'] = dates.value
+    context.data['start_time'] = start_time.value
+    context.data['end_time'] = end_time.value
     context.has_error = False
     context.error = None
     return context
@@ -148,7 +148,7 @@ def MemberPostProcessor(group_id, name):
 
     member = group[0].members.filter(name=name.value)
     if member:
-        context.data['data']['timetables'] = []
+        context.data['timetables'] = []
         for table in group[0].timetables.all():
             table_data = {}
             table_data['id'] = table.pk
@@ -157,8 +157,8 @@ def MemberPostProcessor(group_id, name):
                                                      ).values_list('order')
             order_list = [order[0] for order in order_list]
             table_data['avail_orders'] = order_list
-            context.data['data']['timetables'].append(table_data)
-        context.data['data']['member_id'] = member[0].pk
+            context.data['timetables'].append(table_data)
+        context.data['member_id'] = member[0].pk
         context.has_error = False
         context.error = None
         return context
@@ -167,8 +167,7 @@ def MemberPostProcessor(group_id, name):
         group=group[0],
         name=name.value
     )
-    context.data['data']['msg'] = f'멤버 {member.name}이(가) 성공적으로 생성되었습니다.'
-    context.data['status'] = 201
+    context.data['msg'] = f'멤버 {member.name}이(가) 성공적으로 생성되었습니다.'
     context.has_error = False
     context.error = None
     return context
@@ -216,8 +215,6 @@ def TimesetProcessor(member_id, first_order, last_order,
         context.data = None
         return context
 
-    print(order_range.value)
-
     timetables = group[0].timetables.all()
     for date in dates.value:
         if not timetables.filter(date=date):
@@ -241,8 +238,7 @@ def TimesetProcessor(member_id, first_order, last_order,
                 timeblock = timeblocks.get(order=order)
                 timeblock.avail_members.remove(member[0])
                 timeblock.save()
-    context.data['data']['msg'] = '성공적으로 반영되었습니다.'
-    context.data['status'] = 201
+    context.data['msg'] = '성공적으로 반영되었습니다.'
     context.has_error = False
     context.error = None
     return context

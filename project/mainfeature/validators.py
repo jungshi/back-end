@@ -107,8 +107,14 @@ def validate_times(start_time, end_time):
 
     start_time_cal = int(start_time.value.split(':')[0])
     end_time_cal = int(end_time.value.split(':')[0])
+    start_time_min = int(start_time.value.split(':')[1])
+    end_time_min = int(start_time.value.split(':')[1])
     if end_time_cal <= start_time_cal:
-        context.error_msg = 'end_time은 start_time보다 작거나 같을 수 없습니다.'
+        msg = 'end_time의 hour은 start_time의 hour보다 작거나 같을 수 없습니다.'
+        context.error_msg = msg
+        return context
+    if not (start_time_min == 0 and end_time_min == 0):
+        context.error_msg = 'start_time과 end_time의 minute은 항상 0이어야 합니다.'
         return context
 
     time_gap = end_time_cal - start_time_cal

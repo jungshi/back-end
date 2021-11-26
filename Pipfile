@@ -8,8 +8,12 @@ django = "*"
 djangorestframework = "*"
 django-cors-headers = "*"
 flake8 = "*"
+awsebcli = "*"
+pysqlite3 = "*"
+python-dotenv = "*"
+mysqlclient = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "3.8"
