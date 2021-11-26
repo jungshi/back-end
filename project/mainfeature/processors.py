@@ -174,22 +174,22 @@ def MemberPostProcessor(group_id, name):
     return context
 
 
-def TimesetProcessor(member_pk, first_order, last_order,
+def TimesetProcessor(member_id, first_order, last_order,
                      dates, change_to, group_id):
     context = Context()
 
-    if not (change_to == ('avail' or 'unavail')):
+    if not ((change_to == 'avail') or (change_to == 'unavail')):
         context.error['msg'] = '`change_to`는 `avail` 혹은 `unavail`이어야 합니다.'
         context.data = None
         return context
 
-    member_pk = validate_int(member_pk)
+    member_id = validate_int(member_id)
     first_order = validate_int(first_order)
     last_order = validate_int(last_order)
     dates = validate_date_list(dates)
     group_id = validate_str(group_id)
 
-    validate_list = [member_pk, first_order, last_order,
+    validate_list = [member_id, first_order, last_order,
                      dates, group_id]
     for value in validate_list:
         if value.has_error:
@@ -203,9 +203,9 @@ def TimesetProcessor(member_pk, first_order, last_order,
         context.data = None
         return context
 
-    member = group[0].members.filter(pk=member_pk.value)
+    member = group[0].members.filter(pk=member_id.value)
     if not member:
-        context.error['msg'] = '잘못된 member_pk입니다.'
+        context.error['msg'] = '잘못된 member_id입니다.'
         context.data = None
         return context
 
@@ -235,6 +235,7 @@ def TimesetProcessor(member_pk, first_order, last_order,
                 timeblock.save()
     elif change_to == 'unavail':
         for date in dates.value:
+            timeblocks = TimeBlock.objects.filter(timetable__group=group[0])
             timeblocks = timeblocks.filter(timetable__date=date)
             for order in order_range.value:
                 timeblock = timeblocks.get(order=order)
