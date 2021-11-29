@@ -9,7 +9,7 @@ from django.db.models import Count, Max
 
 
 class Context:
-    
+
     def __init__(self):
         self.error = {}
         self.data = {}

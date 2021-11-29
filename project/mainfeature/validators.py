@@ -52,12 +52,6 @@ def validate_date_list(data):
         context.error_msg = 'date를 list에 담아주세요.'
         return context
     date_list = data
-    # if type(data) == list:
-    #     data = str(data)
-    # date_list = re.findall(date_pattern, data)
-    # if not date_list:
-    #     context.error_msg = '날짜가 포함되지 않았거나, 포함되었지만 형식에서 벗어납니다.'
-    #     return context
     for date in date_list:
         if not date_pattern.match(date):
             context.error_msg = f'`{date}`는 올바른 날짜 형식이 아닙니다.'
