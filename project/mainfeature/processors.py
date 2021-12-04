@@ -223,12 +223,13 @@ def TimesetProcessor(member_id, first_order, last_order,
         return context
 
     timetables = group[0].timetables.all()
-    for pk in table_pk_list:
-        if not timetables.filter(pk=pk).exists():
-            msg = f'`{pk}`번은 해당 그룹의 timetable이 아닙니다.'
-            context.error['msg'] = msg
-            context.data = None
-            return context
+    real_pk_set = {table.pk for table in timetables}
+    is_valid_tables = set(table_pk_list) <= real_pk_set
+    if not is_valid_tables:
+        msg = 'table_pk_list에 올바르지 않은 pk가 포함되어 있습니다.'
+        context.error['msg'] = msg
+        context.data = None
+        return context
 
     if change_to == 'avail':
         for pk in table_pk_list:
