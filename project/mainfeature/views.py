@@ -48,12 +48,12 @@ class TimesetAPIView(APIView):
         member_id = data.get('member_id')
         first_order = data.get('first_order')
         last_order = data.get('last_order')
-        dates = data.get('dates')
+        timetable_pk_list = data.get('timetable_pk_list')
         change_to = data.get('change_to')
         group_id = data.get('group_id')
 
         context = TimesetProcessor(member_id, first_order, last_order,
-                                   dates, change_to, group_id)
+                                   timetable_pk_list, change_to, group_id)
 
         if context.has_error:
             return Response(context.error, status=status.HTTP_400_BAD_REQUEST)

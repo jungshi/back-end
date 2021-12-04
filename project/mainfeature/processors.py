@@ -176,22 +176,27 @@ def MemberPostProcessor(group_id, name):
 
 
 def TimesetProcessor(member_id, first_order, last_order,
-                     dates, change_to, group_id):
+                     table_pk_list, change_to, group_id):
     context = Context()
 
     if not ((change_to == 'avail') or (change_to == 'unavail')):
-        context.error['msg'] = '`change_to`는 `avail` 혹은 `unavail`이어야 합니다.'
+        msg = '`change_to`의 값은 `avail` 혹은 `unavail`이어야 합니다.'
+        context.error['msg'] = msg
+        context.data = None
+        return context
+    
+    if not (table_pk_list and type(table_pk_list) == list):
+        msg = 'table_pk_list가 없거나, 올바른 형식이 아닙니다.'
+        context.error['msg'] = msg
         context.data = None
         return context
 
     member_id = validate_int(member_id)
     first_order = validate_int(first_order)
     last_order = validate_int(last_order)
-    dates = validate_date_list(dates)
     group_id = validate_str(group_id)
 
-    validate_list = [member_id, first_order, last_order,
-                     dates, group_id]
+    validate_list = [member_id, first_order, last_order, group_id]
     for value in validate_list:
         if value.has_error:
             context.error['msg'] = value.error_msg
@@ -218,24 +223,25 @@ def TimesetProcessor(member_id, first_order, last_order,
         return context
 
     timetables = group[0].timetables.all()
-    for date in dates.value:
-        if not timetables.filter(date=date):
-            context.error['msg'] = f'`{date}`는 해당 그룹에게 없는 날짜입니다.'
+    for pk in table_pk_list:
+        if not timetables.filter(pk=pk).exists():
+            msg = f'`{pk}`번은 해당 그룹의 timetable이 아닙니다.'
+            context.error['msg'] = msg
             context.data = None
             return context
 
     if change_to == 'avail':
-        for date in dates.value:
+        for pk in table_pk_list:
             timeblocks = TimeBlock.objects.filter(timetable__group=group[0])
-            timeblocks = timeblocks.filter(timetable__date=date)
+            timeblocks = timeblocks.filter(timetable__pk=pk)
             for order in order_range.value:
                 timeblock = timeblocks.get(order=order)
                 timeblock.avail_members.add(member[0])
                 timeblock.save()
     elif change_to == 'unavail':
-        for date in dates.value:
+        for pk in table_pk_list:
             timeblocks = TimeBlock.objects.filter(timetable__group=group[0])
-            timeblocks = timeblocks.filter(timetable__date=date)
+            timeblocks = timeblocks.filter(timetable__pk=pk)
             for order in order_range.value:
                 timeblock = timeblocks.get(order=order)
                 timeblock.avail_members.remove(member[0])
