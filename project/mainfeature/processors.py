@@ -150,13 +150,14 @@ def MemberPostProcessor(group_id, name):
     if member:
         context.data['timetables'] = []
         for table in group[0].timetables.all():
-            table_data = {}
+            table_data = {'timeblocks': []}
             table_data['id'] = table.pk
             table_data['date'] = table.date
-            order_list = member[0].timeblocks.filter(timetable=table
-                                                     ).values_list('order')
-            order_list = [order[0] for order in order_list]
-            table_data['avail_orders'] = order_list
+            for block in table.timeblocks.all():
+                block_data = {}
+                block_data['order'] = block.order
+                block_data['avail'] = member[0] in block.avail_members.all()
+                table_data['timeblocks'].append(block_data)
             context.data['timetables'].append(table_data)
         context.data['member_id'] = member[0].pk
         context.has_error = False
@@ -167,6 +168,7 @@ def MemberPostProcessor(group_id, name):
         group=group[0],
         name=name.value
     )
+    context.data['member_id'] = member.pk
     context.data['msg'] = f'멤버 {member.name}이(가) 성공적으로 생성되었습니다.'
     context.has_error = False
     context.error = None
